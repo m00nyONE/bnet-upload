@@ -125,4 +125,8 @@ runs:
           echo "::notice:: 🧪 Test deployment!"
         fi
         
+        # temporarly inject the bnet credentials into env and run the command - do not write them to GITHUB_ENV!
+        BNET_USERNAME=${{ inputs.BNET_USERNAME }} 
+        BNET_PASSWORD=${{ inputs.BNET_PASSWORD }}
+        
         eval $CMD
