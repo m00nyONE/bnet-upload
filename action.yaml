@@ -1,0 +1,123 @@
+name: 'BNET Addon upload'
+description: 'Uploads an addon to Bethesda.net (Console Addons only)'
+author: 'm00nyONE'
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+
+inputs:
+  BNET_USERNAME:
+    description: 'Bethesda.net username'
+    required: true
+  BNET_PASSWORD:
+    description: 'Bethesda.net password'
+    required: true
+  addon_id:
+    description: 'Addon ID'
+    required: true
+  version:
+    description: 'Addon version'
+    required: true
+  zip_file:
+    description: 'Path to Addon zip file'
+    required: true
+  release_notes_file:
+    description: 'Path to release notes file (Must not exceed 10000 characters)'
+    required: true
+  concurrency:
+    description: 'The number of concurrent uploads'
+    required: false
+    default: '2'
+  publish:
+    description: 'Whether to publish the addon after upload'
+    required: false
+    default: 'false'
+  cli_uploader_version:
+    description: 'Version of the ESOAddOnUploaderCli to use'
+    required: false
+    default: 'latest'
+runs:
+  using: "composite"
+  steps:
+    - name: Mask Bethesda.net Credentials
+      shell: bash
+      run: |
+        echo "::add-mask::${{ inputs.BNET_USERNAME }}"
+        echo "::add-mask::${{ inputs.BNET_PASSWORD }}"
+
+    - name: verify inputs
+      shell: bash
+      run: |
+        # Check if BNET_USERNAME is not empty
+        if [ -z "${{ inputs.BNET_USERNAME }}" ]; then
+          echo "::error:: ❌ BNET_USERNAME is empty"
+          exit 1
+        fi
+        # Check if BNET_PASSWORD is not empty
+        if [ -z "${{ inputs.BNET_PASSWORD }}" ]; then
+          echo "::error:: ❌ BNET_PASSWORD is empty"
+          exit 1
+        fi
+        # Check if addon_id is a valid UUID
+        re='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'
+        if ! [[ ${{ inputs.addon_id }} =~ $re ]]; then
+          echo "::error:: ❌ addon_id is not a valid UUID"
+          exit 1
+        fi
+        # Check if version is not empty
+        if [ -z "${{ inputs.version }}" ]; then
+          echo "::error:: ❌ version is empty"
+          exit 1
+        fi
+        # Check if release notes file exists
+        if [ ! -f "${{ inputs.release_notes_file }}" ]; then
+          echo "::error:: ❌ Changelog file not found: ${{ inputs.release_notes_file }}"
+          exit 1
+        fi
+        # Check if the release notes file is longer than 10000 characters
+        file_length=$(wc -c < "${{ inputs.release_notes_file }}")
+        if [ "$file_length" -gt 10000 ]; then
+          echo "::error:: ❌ Release Notes file exceeds 10000 characters"
+          exit 1
+        fi
+        # Check if zip file exists
+        if [ ! -f "${{ inputs.zip_file }}" ]; then
+          echo "::error:: ❌ Zip file not found: ${{ inputs.zip_file }}"
+          exit 1
+        fi
+
+    - name: Upload Addon to Bethesda.net
+      shell: bash
+      run: |
+        echo "Downloading ESOAddOnUploaderCli..."
+        curl -s https://sir.insidi.at/or/files/ESOAddOnUploaderCli-${{ inputs.cli_uploader_version }}-linux.tar.gz -o ESOAddOnUploaderCli.tar.gz
+        tar -xzf ESOAddOnUploaderCli.tar.gz
+        chmod +x ESOAddOnUploaderCli
+        
+        # validate that the cli tool starts correctly
+        ./ESOAddOnUploaderCli --help > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+          echo "::error:: ❌ ESOAddOnUploaderCli failed to start"
+          exit 1
+        fi
+        
+        # generate config file
+        jq -Rs --arg addonId "${{ inputs.addon_id }}" --arg version "${{ inputs.version }}" '{
+          addonId: $addonId,
+          version: $version,
+          note: .
+        }' < ${{ inputs.release_notes_file }} > generated-cli-config.json        
+        
+        # build cli command
+        CMD="./ESOAddOnUploaderCli upload \
+          \"${{ inputs.zip_file }}\" \
+          --config generated-cli-config.json \
+          --concurrency \"${{ inputs.concurrency }}\""
+        
+        # if publish is not enabled, add --no-publish flag to cmd
+        if [ "${{ inputs.publish }}" = "false" ]; then
+          CMD="$CMD --no-publish"
+          echo "::notice:: 🧪 Test deployment!"
+        fi
+        
+        eval $CMD
