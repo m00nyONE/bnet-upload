@@ -53,7 +53,7 @@ Example workflow step:
 | release_notes_file   | true     | -       | Path to your release notes file (relative to your repository root directory or absolute from the runners root directory) |
 | publish              | false    | true    | Whether to publish the addon after upload                                                                                |
 | concurrency          | false    | 1       | The number of concurrent uploads                                                                                         |
-| cli_uploader_version | false    | latest  | The version of the cli-uploader to use (e.g. '1.0.0')                                                                    |
+| cli_uploader_version | false    | 1.0.0   | The version of the cli-uploader to use (e.g. '1.0.0')                                                                    |
 
 ### 3. Secrets
 
@@ -62,24 +62,43 @@ Make sure to add your Bethesda.net username and password to your repository’s 
 
 ### 4. Full Workflow Example
 
-This is an example based on HodorReflexes. Adapt it to your needs.
+This is an example based on LibGroupCombatStats. Adapt it to your needs.
 
 ```yaml
-name: ESOUI Release
+name: Create ESOUI Release
 
 on:
   push:
     branches:
-      - release # to be changed to main with schedule
+      - release
 
 jobs:
+  docs:
+    if: github.repository_owner == 'm00nyONE'
+    uses: ./.github/workflows/_generate-docs.yml
+    permissions:
+      contents: write
   release:
+    if: github.repository_owner == 'm00nyONE'
     name: "release"
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: get repo name
+        run: echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
+
+      - name: Create env variables
+        run: |
+          addon_name="${{ env.REPO_NAME }}"
+          version="${{ env.BUILD_DATE_WITH_HYPHEN }}"
+
+          echo "ADDON_NAME=$addon_name" >> $GITHUB_ENV
+          echo "ADDON_VERSION=$version" >> $GITHUB_ENV
+
+          echo "ZIP_FULL_NAME=${addon_name}-${version}.zip" >> $GITHUB_ENV
 
       - name: Get current year, month and day
         run: |
@@ -90,39 +109,28 @@ jobs:
           echo "BUILD_DATE_WITH_DOT=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
           echo "BUILD_DATE_WITH_HYPHEN=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-      - name: Create env variables
-        run: |
-          addon_name="HodorReflexes"
-          version="${{ env.BUILD_DATE_WITH_HYPHEN }}"
-          
-          zip_name="${addon_name}-${version}.zip"
-          
-          echo "ADDON_NAME=$addon_name" >> $GITHUB_ENV
-          echo "ADDON_VERSION=$version" >> $GITHUB_ENV
-          echo "ZIP_FULL_NAME=$zip_name" >> $GITHUB_ENV
-
       - name: Replace placeholders with current date
         run: |
-          sed -i "s/version = \"dev\"/version = \"${{ env.ADDON_VERSION }}\"/g" HodorReflexes.lua
-          sed -i "s/## Version: dev/## Version: ${{ env.ADDON_VERSION }}/g" HodorReflexes.addon
-          sed -i "s/## AddOnVersion: 99999999/## AddOnVersion: ${{ env.BUILD_DATE_NUMBER }}/g" HodorReflexes.addon
+          sed -i "s/version = \"dev\"/version = \"${{ env.ADDON_VERSION }}\"/g" ${{ env.ADDON_NAME }}.lua
+          sed -i "s/## Version: dev/## Version: ${{ env.ADDON_VERSION }}/g" ${{ env.ADDON_NAME }}.addon
+          sed -i "s/## AddOnVersion: 99999999/## AddOnVersion: ${{ env.BUILD_DATE_NUMBER }}/g" ${{ env.ADDON_NAME }}.addon
 
       - name: Create ZIP archive
         run: |
           REPO_FOLDER=$(pwd)
           TMP_FOLDER="/tmp/${{ env.ADDON_NAME }}"
-          
+
           # Define the path to the ignore pattern file
           ignore_file=".build-ignore"
-          
+
           # Read and process ignore patterns into a single line
           exclude_patterns=$(cat "$ignore_file" | awk '{print "--exclude " $0}' | tr '\n' ' ')
-          
+
           # Make folder and copy content
           mkdir -p $TMP_FOLDER
           rsync -a --quiet $exclude_patterns "$REPO_FOLDER/" "$TMP_FOLDER/"
-          
-          # Make full version zip
+
+          # create zip
           (cd /tmp && zip -r --quiet "$REPO_FOLDER/${{ env.ZIP_FULL_NAME }}" "${{ env.ADDON_NAME }}")
 
       - name: Extract latest changelog entry
@@ -131,6 +139,7 @@ jobs:
           cat latest_changes.md
 
       - name: Create GitHub Release
+        #id: create_release
         uses: ncipollo/release-action@v1
         with:
           name: "${{ env.ADDON_VERSION }}"
@@ -142,16 +151,24 @@ jobs:
           allowUpdates: true
           makeLatest: true
 
+      - name: Upload to ESOUI
+        uses: m00nyONE/esoui-upload@v2
+        with:
+          api_key: ${{ secrets.ESOUI_API_KEY }}
+          addon_id: '4024'
+          version: ${{ env.ADDON_VERSION }}
+          zip_file: "${{ env.ZIP_FULL_NAME }}"
+          changelog_file: latest_changes.md
+
       - name: Upload to BNET
-        uses: m00nyONE/bnet-upload@v1
+        uses: m00nyONE/bnet-upload@main
         with:
           BNET_USERNAME: ${{ secrets.BNET_USERNAME }}
           BNET_PASSWORD: ${{ secrets.BNET_PASSWORD }}
           addon_id: '25cfa10b-66f5-4e8c-9d1a-1c452491665f'
           version: ${{ env.ADDON_VERSION }}
-          zip_file: ${{ env.ZIP_FULL_NAME }}
-          release_notes_file: 'latest_changes.md'
-          publish: true
+          zip_file: "${{ env.ZIP_FULL_NAME }}"
+          release_notes_file: latest_changes.md
 ```
 
 

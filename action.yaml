@@ -35,7 +35,7 @@ inputs:
   cli_uploader_version:
     description: 'Version of the ESOAddOnUploaderCli to use'
     required: false
-    default: 'latest'
+    default: '1.0.0'
 runs:
   using: "composite"
   steps:
