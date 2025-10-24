@@ -13,7 +13,7 @@ It wraps the upload process in a safe and reusable action, helping you keep your
 
 ## Features
 
-- ✅ Secure: API key is masked from logs.
+- ✅ Secure: credentials are masked from logs if they ever leak.
 - ✅ Validation: all inputs are validated.
 - ✅ Simple: Clean and easy integration in your workflows.
 - ✅ Customizable: Reusable across multiple addons or repositories.
