@@ -5,7 +5,8 @@
 [![GitHub release](https://img.shields.io/github/v/tag/m00nyONE/bnet-upload?label=release)](https://github.com/m00nyONE/bnet-upload/releases)
 
 
-This Github Action Automates the upload of your ESO (Elder Scrolls Online) addon to [mods.bethesda.net](https://mods.bethesda.net/en/elderscrollsonline/).
+This Github Action Automates the upload of your ESO (Elder Scrolls Online) addon to [mods.bethesda.net](https://mods.bethesda.net/en/elderscrollsonline/) by using the ESOAddOnUploader-Cli for bethesda.net made by [@sirinsidiator](https://github.com/sirinsidiator).
+
 This only works for Console Addons.
 
 It wraps the upload process in a safe and reusable action, helping you keep your secrets secure and your workflows clean.
