@@ -27,11 +27,11 @@ inputs:
   concurrency:
     description: 'The number of concurrent uploads'
     required: false
-    default: '2'
+    default: '1'
   publish:
     description: 'Whether to publish the addon after upload'
     required: false
-    default: 'false'
+    default: 'true'
   cli_uploader_version:
     description: 'Version of the ESOAddOnUploaderCli to use'
     required: false

@@ -51,8 +51,8 @@ Example workflow step:
 | version              | true     | -       | The version number of the addon                        |
 | zip_file             | true     | -       | Path to your zipped addon file                         |
 | release_notes_file   | true     | -       | Path to your release notes file                        |
-| publish              | false    | false   | Whether to publish the addon after upload              |
-| concurrency          | false    | 2       | The number of concurrent uploads                       |
+| publish              | false    | true    | Whether to publish the addon after upload              |
+| concurrency          | false    | 1       | The number of concurrent uploads                       |
 | cli_uploader_version | false    | latest  | The version of the cli-uploader to use (e.g. '1.0.0')  |
 
 ### 3. Secrets
