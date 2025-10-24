@@ -85,6 +85,11 @@ runs:
           echo "::error:: ❌ Zip file not found: ${{ inputs.zip_file }}"
           exit 1
         fi
+        # Check if concurrency is a positive integer
+        if ! [[ "${{ inputs.concurrency }}" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error:: ❌ concurrency is not a positive integer"
+          exit 1
+        fi
 
     - name: Upload Addon to Bethesda.net
       shell: bash
@@ -112,7 +117,7 @@ runs:
         CMD="./ESOAddOnUploaderCli upload \
           \"${{ inputs.zip_file }}\" \
           --config generated-cli-config.json \
-          --concurrency \"${{ inputs.concurrency }}\""
+          --concurrency ${{ inputs.concurrency }}"
         
         # if publish is not enabled, add --no-publish flag to cmd
         if [ "${{ inputs.publish }}" = "false" ]; then
