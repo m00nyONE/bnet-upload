@@ -19,10 +19,10 @@ inputs:
     description: 'Addon version'
     required: true
   zip_file:
-    description: 'Path to Addon zip file'
+    description: 'Path to Addon zip file (relative to your repository root directory or absolute from the runners root directory)'
     required: true
   release_notes_file:
-    description: 'Path to release notes file (Must not exceed 10000 characters)'
+    description: 'Path to release notes file (Must not exceed 10000 characters) (relative to your repository root directory or absolute from the runners root directory)'
     required: true
   concurrency:
     description: 'The number of concurrent uploads'
