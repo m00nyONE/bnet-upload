@@ -6,10 +6,11 @@
 
 
 This Github Action Automates the upload of your ESO (Elder Scrolls Online) addon to [mods.bethesda.net](https://mods.bethesda.net/en/elderscrollsonline/) by using the ESOAddOnUploader-Cli for bethesda.net made by [@sirinsidiator](https://github.com/sirinsidiator) which can be found here https://github.com/sirinsidiator/ESOAddOnUploaderCLI.
+It wraps the upload process in a safe and reusable action, helping you keep your secrets secure and your workflows clean.
+
 
 This only works for Console Addons.
 
-It wraps the upload process in a safe and reusable action, helping you keep your secrets secure and your workflows clean.
 
 ## Features
 
