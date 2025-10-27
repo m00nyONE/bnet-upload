@@ -102,14 +102,17 @@ runs:
           api_endpoint="tags/${{ inputs.cli_uploader_version }}"
         fi
         URL=$(curl -s https://api.github.com/repos/sirinsidiator/ESOAddOnUploaderCLI/releases/${api_endpoint} | jq -r '.assets[] | select(.name? | match("ESOAddOnUploaderCli-linux.tar.gz$")) | .browser_download_url')
-        curl -sL $URL -o ESOAddOnUploaderCli.tar.gz
+        if [[ -z "$URL" ]]; then
+          echo "::error:: ❌ Failed to get download URL for ESOAddOnUploaderCli"
+          exit 1
+        fi
+        curl -sL "$URL" -o ESOAddOnUploaderCli.tar.gz
         tar -xzf ESOAddOnUploaderCli.tar.gz
         chmod +x ESOAddOnUploaderCli
         
         # validate that the cli tool starts correctly
-        ./ESOAddOnUploaderCli --help > /dev/null 2>&1
-        if [ $? -ne 0 ]; then
-          echo "::error:: ❌ ESOAddOnUploaderCli failed to start"
+        if ! ./ESOAddOnUploaderCli --help > /dev/null 2>&1; then
+          echo "::error:: ❌ ESOAddOnUploaderCli konnte nicht gestartet werden"
           exit 1
         fi
         
@@ -120,22 +123,10 @@ runs:
           note: .
         }' < ${{ inputs.release_notes_file }} > generated-cli-config.json        
         
-        # build cli command
-        CMD="./ESOAddOnUploaderCli upload \
-          \"${{ inputs.zip_file }}\" \
-          --config generated-cli-config.json \
-          --concurrency ${{ inputs.concurrency }}"
-        
-        # if publish is not enabled, add --no-publish flag to cmd
-        if [ "${{ inputs.publish }}" = "false" ]; then
-          CMD="$CMD --no-publish"
-          echo "::notice:: 🧪 Test deployment!"
-        fi
-        
         # temporarly inject the bnet credentials into env and run the command - do not write them to GITHUB_ENV!
         export BNET_USERNAME=${{ inputs.BNET_USERNAME }} 
         export BNET_PASSWORD=${{ inputs.BNET_PASSWORD }}
         
         echo "Uploading release ..."
-        eval $CMD
+        ./ESOAddOnUploaderCli upload "${{ inputs.zip_file }}" --config "generated-cli-config.json" --concurrency "${{ inputs.concurrency }}" $([[ "${{ inputs.publish }}" == "false" ]] && echo "--no-publish")
         echo "::notice:: Upload successful!"
