@@ -5,7 +5,7 @@
 [![GitHub release](https://img.shields.io/github/v/tag/m00nyONE/bnet-upload?label=release)](https://github.com/m00nyONE/bnet-upload/releases)
 
 
-This Github Action Automates the upload of your ESO (Elder Scrolls Online) addon to [mods.bethesda.net](https://mods.bethesda.net/en/elderscrollsonline/) by using the ESOAddOnUploader-Cli for bethesda.net made by [@sirinsidiator](https://github.com/sirinsidiator).
+This Github Action Automates the upload of your ESO (Elder Scrolls Online) addon to [mods.bethesda.net](https://mods.bethesda.net/en/elderscrollsonline/) by using the ESOAddOnUploader-Cli for bethesda.net made by [@sirinsidiator](https://github.com/sirinsidiator) which can be found here https://github.com/sirinsidiator/ESOAddOnUploaderCLI.
 
 This only works for Console Addons.
 
@@ -53,7 +53,7 @@ Example workflow step:
 | release_notes_file   | true     | -       | Path to your release notes file (relative to your repository root directory or absolute from the runners root directory) |
 | publish              | false    | true    | Whether to publish the addon after upload                                                                                |
 | concurrency          | false    | 1       | The number of concurrent uploads                                                                                         |
-| cli_uploader_version | false    | 1.0.0   | The version of the cli-uploader to use (e.g. '1.0.0')                                                                    |
+| cli_uploader_version | false    | latest  | The version of the cli-uploader to use (e.g. '1.1.0')                                                                    |
 
 ### 3. Secrets
 

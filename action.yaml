@@ -35,7 +35,7 @@ inputs:
   cli_uploader_version:
     description: 'Version of the ESOAddOnUploaderCli to use'
     required: false
-    default: '1.0.0'
+    default: 'latest'
 runs:
   using: "composite"
   steps:
@@ -95,7 +95,14 @@ runs:
       shell: bash
       run: |
         echo "Downloading ESOAddOnUploaderCli..."
-        curl -s https://sir.insidi.at/or/files/ESOAddOnUploaderCli-${{ inputs.cli_uploader_version }}-linux.tar.gz -o ESOAddOnUploaderCli.tar.gz
+        # get the download URL from github api. All other methods are just unreliable at best
+        if [ "${{ inputs.cli_uploader_version }}" = "latest" ]; then
+          api_endpoint="latest"
+        else
+          api_endpoint="tags/${{ inputs.cli_uploader_version }}"
+        fi
+        URL=$(curl -s https://api.github.com/repos/sirinsidiator/ESOAddOnUploaderCLI/releases/${api_endpoint} | jq -r '.assets[] | select(.name? | match("ESOAddOnUploaderCli-linux.tar.gz$")) | .browser_download_url')
+        curl -sL $URL -o ESOAddOnUploaderCli.tar.gz
         tar -xzf ESOAddOnUploaderCli.tar.gz
         chmod +x ESOAddOnUploaderCli
         
@@ -106,7 +113,7 @@ runs:
           exit 1
         fi
         
-        # generate config file
+        echo "generating config file ..."
         jq -Rs --arg addonId "${{ inputs.addon_id }}" --arg version "${{ inputs.version }}" '{
           addonId: $addonId,
           version: $version,
@@ -129,4 +136,6 @@ runs:
         export BNET_USERNAME=${{ inputs.BNET_USERNAME }} 
         export BNET_PASSWORD=${{ inputs.BNET_PASSWORD }}
         
+        echo "Uploading release ..."
         eval $CMD
+        echo "::notice:: Upload successful!"
