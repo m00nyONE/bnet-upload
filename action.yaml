@@ -101,7 +101,7 @@ runs:
         else
           api_endpoint="tags/${{ inputs.cli_uploader_version }}"
         fi
-        URL=$(curl -s https://api.github.com/repos/sirinsidiator/ESOAddOnUploaderCLI/releases/${api_endpoint} | jq -r '.assets[] | select(.name? | match("ESOAddOnUploaderCli-linux.tar.gz$")) | .browser_download_url')
+        URL=$(curl -s https://api.github.com/repos/sirinsidiator/ESOAddOnUploaderCLI/releases/${api_endpoint} | jq -r '.assets[] | select(.name? | test("-linux.tar.gz$")) | .browser_download_url')
         if [[ -z "$URL" ]]; then
           echo "::error:: ❌ Failed to get download URL for ESOAddOnUploaderCli"
           exit 1
