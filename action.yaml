@@ -128,5 +128,5 @@ runs:
         export BNET_PASSWORD=${{ inputs.BNET_PASSWORD }}
         
         echo "Uploading release ..."
-        ./ESOAddOnUploaderCli upload "${{ inputs.zip_file }}" --config "generated-cli-config.json" --concurrency "${{ inputs.concurrency }}" $([[ "${{ inputs.publish }}" == "false" ]] && echo "--no-publish")
+        ./ESOAddOnUploaderCli upload "${{ inputs.zip_file }}" --config "generated-cli-config.json" --concurrency "${{ inputs.concurrency }}" $([[ "${{ inputs.publish }}" == "false" ]] && echo "--no-publish") --no-progress
         echo "::notice:: Upload successful!"
