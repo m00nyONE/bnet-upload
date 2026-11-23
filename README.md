@@ -32,7 +32,7 @@ Example workflow step:
 
 ```yaml
 - name: Upload to BNET
-  uses: m00nyONE/bnet-upload@v1
+  uses: m00nyONE/bnet-upload@main
   with:
     BNET_USERNAME: ${{ secrets.BNET_USERNAME }}
     BNET_PASSWORD: ${{ secrets.BNET_PASSWORD }}
